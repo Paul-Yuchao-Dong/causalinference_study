@@ -1,0 +1,101 @@
+---
+title: "Chapter 1"
+output: github_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+library(dagitty)
+
+```
+## Study Question 1.4.1
+```{r}
+g <- dagitty('dag {
+    X [pos="0,1"]
+    Y [pos="1,1"]
+    Z [pos="2,1"]
+    W [pos="1,0"]
+    T [pos="2,2"]
+
+  X->W->Z->T
+  X->Y->Z->T
+  W->Y
+  Y->T
+}')
+plot(g)
+```
+```{r variance prop}
+N <- 100000
+X <- rnorm(N)
+Y <- X/3 + rnorm(N)
+Z <- Y/16 + rnorm(N)
+```
+
+```{r}
+var(X)
+```
+```{r}
+var(Y)
+```
+
+```{r}
+summary(lm(X~Y) )
+```
+```{r}
+fig2.5 <- dagitty("dag {
+    X -> R -> S -> T <- U <- V -> Y
+}")
+plot( graphLayout( fig2.5 ) )
+```
+```{r}
+paths(fig2.5, "X", "Y", c("R", "V"))
+```
+```{r}
+library(purrr)
+```
+
+```{r}
+pairs <- combn(c("X","S","T","U","Y"), 2, simplify = F)
+walk(pairs,  function(x) {
+  p <- paths(fig2.5, x[1], x[2], c("R", "V"))
+  if (!p$open) message( x[1], " and ", x[2], " are conditionally independent given {R,V}")
+  else message( x[1], " and ", x[2], " are possibly dependent given {R,V}")
+})
+
+```
+```{r}
+fig2.6 <- dagitty("dag {
+                  X->R->S->T<-U<-V->Y
+                  T->P
+}")
+variables <- unlist(strsplit("X S T U V Y", split = " ") )
+```
+```{r}
+pairs <- combn(variables, 2, simplify = F)
+walk(pairs,  function(x) {
+    if (dseparated(fig2.6, x[1], x[2], c("R", "P"))) message(x[1], " and ", x[2], " are conditionally independent given {R, P}")
+})
+```
+```{r}
+impliedConditionalIndependencies(fig2.6)
+```
+```{r}
+map_lgl(set_names(names(fig2.5)), function(Z) {
+  dseparated(fig2.5, "Y", "X", Z)
+})
+```
+```{r}
+d <- simulateSEM(fig2.5, .7,.7, N=1e4)
+lm(Y ~ X + V, data = d) %>% confint
+```
+```{r}
+lm(Y ~ X + T, data = d) %>% confint
+
+```
+
+```{r}
+d <- simulateSEM(fig2.6, .7, .7, N = 1e4)
+lm(Y ~ X + R + S + T + P, data = d) %>% confint
+```
+
