@@ -1,0 +1,55 @@
+---
+title: "Chapter 3"
+output: github_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+library(dagitty)
+```
+```{r}
+fig3.8 <- dagitty("dag{
+                  x<-a<-b->z<-c->d->y
+                  x<-z->y
+                  x->w->y
+}")
+```
+```{r}
+ps <- paths(fig3.8, "x", "y")
+ps
+```
+```{r}
+ps_hat <- paths(fig3.8, "x", "y", c("a","z"))
+ps_hat
+```
+```{r}
+adjustmentSets(fig3.8, "x", "y", type = "minimal")
+```
+
+
+```{r}
+impliedConditionalIndependencies(fig3.8)
+```
+```{r}
+ps_3 <- paths(fig3.8, "d", "y")
+ps_3
+```
+
+```{r}
+ps_c <- paths(fig3.8, "w", "y")
+ps_c
+```
+```{r}
+adjustmentSets(fig3.8, c("w","d"), "y", type = "all")
+```
+
+```{r}
+path_between_d_y <- paths(fig3.8, "d", "y")
+path_between_d_y
+```
+
+```{r}
+path_between_w_y <- paths(fig3.8, "w", "y")
+path_between_w_y
+```
