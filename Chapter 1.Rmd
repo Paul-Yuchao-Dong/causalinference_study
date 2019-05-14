@@ -99,3 +99,59 @@ d <- simulateSEM(fig2.6, .7, .7, N = 1e4)
 lm(Y ~ X + R + S + T + P, data = d) %>% confint
 ```
 
+```{r}
+fig2.9 <- dagitty("dag { 
+X <- Z1 -> Z3 <- Z2 -> Y
+X <- Z3 -> Y
+X -> W -> Y
+}")
+coordinates(fig2.9) <- list(x=c(X=1,W=2,Y=3,Z1=1,Z3=2,Z2=3),
+    y=c(X=0,W=0,Y=0,Z2=-2,Z1=-2,Z3=-1))
+plot(fig2.9)
+```
+```{r}
+dseparated(fig2.9, "X","Y", c("W", "Z3"))
+```
+```{r}
+paths(fig2.9, "X","Y", c("W", "Z3"))
+```
+```{r}
+paths(fig2.9, "Z1", "W", "X")
+```
+```{r}
+paths(fig2.9, "Z3", "W", "X")
+```
+```{r}
+latents(fig2.9)<-  setdiff(names(fig2.9) , c("Z3", "W", "X", "Z1"))
+impliedConditionalIndependencies(fig2.9)
+```
+```{r}
+pairs <- combn(names(fig2.9), 2 , simplify = F)
+walk(pairs, function(x){
+  all_others <- setdiff(names(fig2.9), x)
+  if (dseparated(fig2.9, x[1], x[2], all_others)) 
+    message(x[1], " and ", x[2], " are conditionally independent given ", 
+            paste(all_others, collapse = " ,"))
+})
+```
+```{r}
+paths(fig2.9, "Z3", "Z2")
+```
+
+## Suppose we wish to predict the value of Z2 from measurements of Z3. Would the quality of our prediction improve if we add measurement of W? Explain.
+
+This is a tough question. Statistically speaking, it is well known that a (within-sample) prediction can never get worse by adding more predictors. However, we have learnt before that it does not help to add predictors that are d-separated from the outcome variable by the other predictors (in other words, once we include all variables in the Markov blanket prediction, we are good). So the first thing to check is whether W is d-separated from Z2 given Z3. This is not the case, as can be easily seen by path inspection:
+
+```{r}
+p <- paths(fig2.9, "W", "Z2", "Z3")
+p
+```
+
+```{r}
+latents(fig2.9) <- NULL
+d <- simulateSEM(fig2.9, .4, .4, N = 1e4)
+lm(Z2 ~ Z3, data = d) %>% summary()
+lm(Z2 ~ Z3 + W, data = d) %>% summary()
+
+```
+
