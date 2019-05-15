@@ -1,0 +1,38 @@
+---
+title: "dagitty powerful!"
+output: github_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+library(dagitty)
+```
+
+```{r}
+d <- read_csv("http://dagitty.net/sports.csv")
+```
+```{r}
+g <- downloadGraph("dagitty.net/mN4IKjR")
+g
+```
+
+```{r}
+plot(g)
+```
+```{r}
+r <- localTests(g, d)
+```
+```{r}
+r$p.value <- p.adjust(r$p.value)
+```
+```{r}
+r <- r[r$p.value<0.05, ]
+```
+```{r}
+plotLocalTestResults(r)
+```
+```{r}
+equivalentDAGs(g) %>% purrr::map(plot)
+```
+
